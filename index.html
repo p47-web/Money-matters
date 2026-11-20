@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Expense Tracker</title>
+<link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><meta name="theme-color" content="#4f46e5">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f5f6f8;--card:#fff;--tx:#1b1f27;--mu:#6b7280;--bd:#e5e7eb;--ac:#4f46e5;--g:#16a34a;--gb:#dcfce7;--a:#b45309;--ab:#fef3c7;--r:#dc2626;--rb:#fee2e2;--b:#2563eb;--bb:#dbeafe;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1115;--card:#181b22;--tx:#eceef2;--mu:#9aa1ad;--bd:#2a2f3a;--ac:#818cf8;--g:#4ade80;--gb:#14351f;--a:#fbbf24;--ab:#3a2d0b;--r:#f87171;--rb:#3d1717;--b:#60a5fa;--bb:#14274a;color-scheme:dark}}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:720px;margin:0 auto;padding:16px;display:grid;gap:14px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px}
+h1{font-size:20px;margin:0}h2{font-size:15px;margin:0 0 10px}.mu{color:var(--mu);font-size:13px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.big{font-size:28px;font-weight:700}
+.bar{height:10px;background:var(--bd);border-radius:6px;overflow:hidden;margin:8px 0}.bar i{display:block;height:100%;background:var(--ac)}
+input,select,button{font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:9px 10px}
+button{cursor:pointer}button.p{background:var(--ac);color:#fff;border-color:var(--ac)}
+.tabs{display:flex;gap:6px;margin-bottom:10px}.tabs button{flex:1}.tabs .on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.wrap{overflow-x:auto}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--bd);white-space:nowrap}th{font-size:12px;color:var(--mu);font-weight:600}
+.tag{padding:3px 9px;border-radius:20px;font-size:12px;font-weight:600}
+.G{background:var(--gb);color:var(--g)}.A{background:var(--ab);color:var(--a)}.R{background:var(--rb);color:var(--r)}.B{background:var(--bb);color:var(--b)}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:10px}
+.grid div{min-height:46px;border:1px solid var(--bd);border-radius:8px;padding:3px 4px;font-size:11px;cursor:pointer}
+.grid .h{border:0;min-height:0;text-align:center;color:var(--mu);cursor:default}
+.grid .sel{outline:2px solid var(--ac)}.grid .td{background:var(--bb)}.grid b{display:block;font-size:12px;color:var(--r)}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:8px}.form .w{grid-column:1/-1}
+.pace{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+[hidden]{display:none!important}#pg-dash,#pg-st{display:grid;gap:14px}label input,label select{width:100%;display:block;margin-top:4px}.tabs.nav{margin:0}.pace b{display:block;font-size:18px}
+</style></head><body><main>
+<div class="row"><h1>💸 Expense Tracker</h1><span class="mu" id="cyc"></span></div>
+<div class="tabs nav" id="nav"><button data-p="dashboard">Dashboard</button><button data-p="statement">Statement</button></div>
+<div id="pg-dash">
+
+<section class="card">
+  <div class="row"><span class="mu">Total budget</span><span>₹ <input id="bud" type="number" style="width:120px"></span></div>
+  <div class="big" id="spendable"></div>
+  <div class="mu" id="sipline"></div>
+  <div class="bar"><i id="pbar"></i></div>
+  <div class="row"><span><b id="spent"></b> spent</span><span class="tag" id="ppct"></span></div>
+</section>
+
+<section class="card"><h2>Pace for the remaining days</h2>
+  <div class="pace"><div><span class="mu">Left to spend</span><b id="left"></b></div><div><span class="mu">Days left</span><b id="dl"></b></div><div><span class="mu">Per day</span><b id="pd"></b></div></div>
+</section>
+
+<section class="card"><h2>Category-wise spend</h2>
+  <div class="wrap"><table><thead><tr><th>Category</th><th>Spend</th><th>% of limit</th><th>Status</th></tr></thead><tbody id="cats"></tbody></table></div>
+  <p class="mu" style="margin:8px 0 0">Limits (of spendable): Rent 40% · Food 25% · Auto 15% · Shop 20%. 🔵 Too less · 🟢 On track · 🟡 High · 🔴 Too much</p>
+</section>
+
+<section class="card"><h2>Add expense</h2>
+  <div class="form">
+    <input id="amt" type="number" placeholder="Amount ₹">
+    <select id="cat"><option>Auto</option><option>Food</option><option>Rent</option><option>Shop</option></select>
+    <input id="dt" type="date"><input id="note" placeholder="Note (optional)">
+    <button class="p w" id="add">Add expense</button>
+  </div>
+</section>
+
+<section class="card"><h2>Calendar</h2>
+  <div class="tabs"><button data-v="day">Daily</button><button data-v="week">Weekly</button><button data-v="month">Monthly</button></div>
+  <div id="grid" class="grid"></div>
+  <div class="row"><b id="ptitle"></b><b id="ptotal"></b></div>
+  <div class="wrap"><table><tbody id="list"></tbody></table></div>
+</section>
+
+<section class="card"><h2>🔔 Payment reminder</h2>
+  <div class="row"><span class="mu" id="rtxt">Every 6 hours: “Did you log today’s payments?”</span><button id="rem">Turn on</button></div>
+  <p class="mu" style="margin:8px 0 0">Fires every 6 hours while the app is open. Install it to your home screen (Add to Home Screen) for best results on mobile.</p>
+</section>
+</div>
+<div id="pg-st" hidden>
+<section class="card"><h2>Spend statement</h2>
+ <div class="form"><label class="mu">From<input id="sf" type="date"></label><label class="mu">To<input id="se" type="date"></label>
+ <label class="mu w">Category<select id="sc"><option value="">All categories</option><option>Auto</option><option>Food</option><option>Rent</option><option>Shop</option></select></label></div>
+ <div class="tabs" id="presets" style="margin:10px 0 0"><button data-pr="c">This cycle</button><button data-pr="l">Last cycle</button><button data-pr="m">Last 30 days</button></div>
+</section>
+<section class="card" id="stcard">
+ <div class="row"><b>Statement of Account</b><span class="mu" id="stper"></span></div>
+ <p id="stsum" class="mu"></p>
+ <div class="wrap"><table id="sttbl"><thead><tr><th>Date</th><th>Narration</th><th>Category</th><th>Debit</th><th>Running total</th></tr></thead><tbody id="stbody"></tbody></table></div>
+ <div class="row" id="dlbox" style="margin-top:12px;justify-content:flex-start"><button class="p" id="csv">⬇ Download CSV</button><button id="htm">⬇ Printable statement</button></div>
+</section>
+</div>
+</main>
+<script>
+const $=s=>document.querySelector(s),CATS=["Auto","Food","Rent","Shop"],LIM={Auto:15,Food:25,Rent:40,Shop:20};
+const K=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const P=s=>{const[a,b,c]=s.split("-");return new Date(+a,b-1,+c)};
+const ADD=(d,n)=>new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);
+const inr=n=>"₹"+Math.round(n).toLocaleString("en-IN");
+const today=new Date(),T=new Date(today.getFullYear(),today.getMonth(),today.getDate());
+const start=T.getDate()>=12?new Date(T.getFullYear(),T.getMonth(),12):new Date(T.getFullYear(),T.getMonth()-1,12);
+const end=new Date(start.getFullYear(),start.getMonth()+1,11);
+let S,view="month",sel=K(T);
+try{S=JSON.parse(localStorage.getItem("xp2"))}catch(e){}
+if(!S){const d=o=>{const x=ADD(T,-o);return K(x<start?start:x)};
+S={budget:50000,sip:20000,remind:false,last:0,exp:[
+{id:1,a:13500,c:"Rent",d:d(3),n:"Room rent"},{id:2,a:450,c:"Food",d:d(2),n:"Dinner"},{id:3,a:300,c:"Auto",d:d(2),n:"Auto rides"},
+{id:4,a:1800,c:"Shop",d:d(1),n:"Clothes"},{id:5,a:600,c:"Food",d:d(0),n:"Groceries"}]}}
+const save=()=>{try{localStorage.setItem("xp2",JSON.stringify(S))}catch(e){}};
+const inCycle=e=>{const x=P(e.d);return x>=start&&x<=end};
+function status(used,el){ // used = % of limit, el = % of cycle elapsed
+ if(used>100)return["R","Too much"];if(used>el+15)return["A","High"];if(used<el-25)return["B","Too less"];return["G","On track"]}
+function monthSum(ex,sp){
+ const el=Math.round((T-start)/864e5)+1;let ts=0,tl=0,tm=0;
+ const r=CATS.map(c=>{const v=ex.filter(e=>e.c==c).reduce((s,e)=>s+e.a,0),left=sp*LIM[c]/100-v,mo=v/el*30;ts+=v;tl+=left;tm+=mo;
+  return`<tr><td>${c}</td><td>${inr(v)}</td><td><span class="tag ${left<0?"R":"G"}">${left<0?"-":""}${inr(Math.abs(left))}</span></td><td>${inr(mo)}</td></tr>`}).join("");
+ return`<tr><th>Category</th><th>Total spent</th><th>Left to spend</th><th>Monthly (avg×30)</th></tr>${r}<tr><td><b>Total</b></td><td><b>${inr(ts)}</b></td><td><b>${tl<0?"-":""}${inr(Math.abs(tl))}</b></td><td><b>${inr(tm)}</b></td></tr><tr><td colspan="4" class="mu">Monthly = (spent so far ÷ ${el} days) × 30</td></tr>`}
+function render(){
+ const ex=S.exp.filter(inCycle),spent=ex.reduce((s,e)=>s+e.a,0),sp=Math.max(S.budget-S.sip,0);
+ $("#cyc").textContent=start.toLocaleDateString("en-IN",{day:"numeric",month:"short"})+" → "+end.toLocaleDateString("en-IN",{day:"numeric",month:"short"});
+ $("#bud").value=S.budget;$("#spendable").textContent=inr(sp)+" spendable";
+ $("#sipline").textContent=inr(S.sip)+" kept aside in advance for SIP";
+ const pc=sp?spent/sp*100:0;$("#spent").textContent=inr(spent);$("#pbar").style.width=Math.min(pc,100)+"%";
+ const t=$("#ppct");t.textContent=pc.toFixed(1)+"% used";t.className="tag "+(pc>100?"R":pc>80?"A":"G");
+ const dl=Math.round((end-T)/864e5)+1,left=sp-spent;
+ $("#left").textContent=inr(left);$("#dl").textContent=dl;$("#pd").textContent=left>0?inr(left/dl):"₹0";
+ const el=((T-start)/864e5+1)/(Math.round((end-start)/864e5)+1)*100;
+ $("#cats").innerHTML=CATS.map(c=>{const v=ex.filter(e=>e.c==c).reduce((s,e)=>s+e.a,0),lim=sp*LIM[c]/100,u=lim?v/lim*100:0,[k,l]=status(u,el);
+  return`<tr><td>${c}</td><td>${inr(v)}</td><td><span class="tag ${k}">${u.toFixed(0)}%</span></td><td><span class="tag ${k}">${l}</span></td></tr>`}).join("");
+ document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on",b.dataset.v==view));
+ // grid
+ const tot={};ex.forEach(e=>tot[e.d]=(tot[e.d]||0)+e.a);
+ let g=["S","M","T","W","T","F","S"].map(x=>`<div class="h">${x}</div>`).join("")+"<div class='h'></div>".repeat(start.getDay());
+ for(let d=new Date(start);d<=end;d=ADD(d,1)){const key=K(d);
+  g+=`<div data-d="${key}" class="${key==sel?"sel ":""}${key==K(T)?"td":""}">${d.getDate()}${tot[key]?`<b>${Math.round(tot[key])}</b>`:""}</div>`}
+ $("#grid").innerHTML=g;
+ // period
+ const sd=P(sel);let a=sd,b=sd;
+ if(view=="week"){a=ADD(sd,-sd.getDay());b=ADD(a,6)}if(view=="month"){a=start;b=end}
+ const rows=S.exp.filter(e=>{const x=P(e.d);return x>=a&&x<=b}).sort((x,y)=>y.d.localeCompare(x.d));
+ $("#ptitle").textContent=view=="day"?sd.toDateString():view=="week"?"Week: "+a.toLocaleDateString("en-IN",{day:"numeric",month:"short"})+" – "+b.toLocaleDateString("en-IN",{day:"numeric",month:"short"}):"Full cycle";
+ $("#ptotal").textContent=inr(rows.reduce((s,e)=>s+e.a,0));
+ $("#list").innerHTML=view=="month"?monthSum(ex,sp):rows.length?rows.map(e=>`<tr><td>${e.d.slice(5)}</td><td>${e.c}</td><td>${(e.n||"").replace(/[<>&]/g,"")}</td><td>${inr(e.a)}</td><td><button data-x="${e.id}">✕</button></td></tr>`).join(""):`<tr><td class="mu">No expenses</td></tr>`;
+ $("#rem").textContent=S.remind?"Turn off":"Turn on";save()}
+$("#bud").onchange=e=>{S.budget=+e.target.value||0;render()};
+$("#add").onclick=()=>{const a=+$("#amt").value;if(!a)return;S.exp.push({id:Date.now(),a,c:$("#cat").value,d:$("#dt").value||K(T),n:$("#note").value});$("#amt").value="";$("#note").value="";render()};
+$("#dt").value=K(T);
+document.querySelector(".tabs").onclick=e=>{if(e.target.dataset.v){view=e.target.dataset.v;render()}};
+$("#grid").onclick=e=>{if(e.target.closest("[data-d]")){sel=e.target.closest("[data-d]").dataset.d;render()}};
+$("#list").onclick=e=>{if(e.target.dataset.x){S.exp=S.exp.filter(x=>x.id!=e.target.dataset.x);render()}};
+const REM_MSG='Payment reminder: have you logged today\u2019s expenses?';
+async function ping(){S.last=Date.now();save();
+ try{if('Notification' in window&&Notification.permission=='granted'){const r=await navigator.serviceWorker.getRegistration();r?r.showNotification('Expense Tracker',{body:REM_MSG,icon:'icon-192.png',tag:'rem'}):new Notification('Expense Tracker',{body:REM_MSG});return}}catch(e){}
+ alert(REM_MSG)}
+const due=()=>S.remind&&Date.now()-(S.last||0)>=6*36e5;
+$('#rem').onclick=async()=>{S.remind=!S.remind;if(S.remind){S.last=Date.now();if('Notification' in window&&Notification.permission=='default'){try{await Notification.requestPermission()}catch(e){}}
+ try{const r=await navigator.serviceWorker.ready;if(r.periodicSync)await r.periodicSync.register('pay-reminder',{minInterval:6*36e5})}catch(e){}}render()};
+setInterval(()=>{if(due())ping()},60000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&due())ping()});
+if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+render();setR(start,end);route();
+</script></body></html>
